@@ -1,0 +1,46 @@
+<div class="login-component">
+    <h1 class="login-title">LogIn/Register</h1>
+    <form class="login-form" action="return false;">
+        <mat-form-field class="login-forms-inputs">
+            <mat-label>Username</mat-label>
+            <input type="text" [(ngModel)]="name" matInput required [formControl]="userNameFormControl"
+                [errorStateMatcher]="matcher">
+            @if (userNameFormControl.hasError('minlength')) {
+            <mat-error>Min characteres: {{userNameFormControl.errors?.['minlength']?.requiredLength}} Actual:
+                {{userNameFormControl.errors?.['minlength']?.actualLength}}</mat-error>
+            }
+            @if (userNameFormControl.hasError('required')) {
+            <mat-error>Username is <strong>required</strong></mat-error>
+            }
+        </mat-form-field>
+
+        <mat-form-field class="login-forms-inputs">
+            <mat-label>Enter your password</mat-label>
+            <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="password" required
+                [formControl]="passwordFormControl" [errorStateMatcher]="matcher">
+            @if (passwordFormControl.hasError('minlength')) {
+            <mat-error>Min characteres: {{passwordFormControl.errors?.['minlength']?.requiredLength}} Actual:
+                {{passwordFormControl.errors?.['minlength']?.actualLength}}</mat-error>
+            }
+            @if (passwordFormControl.hasError('required')) {
+            <mat-error>Username is <strong>required</strong></mat-error>
+            }
+            <button mat-icon-button matSuffix (click)="clickEvent($event)" [attr.aria-label]="'Hide password'"
+                [attr.aria-pressed]="hide()">
+                <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+        </mat-form-field>
+
+        <div class="login-buttons">
+            <button mat-button (click)="login('login')">LogIn</button>
+            <button mat-button (click)="login('register')">Register</button>
+        </div>
+    </form>
+
+    @if (errors) {
+    <div class="login-errors">
+        <h2>Error: <p>{{errors}}</p>
+        </h2>
+    </div>
+    }
+</div>

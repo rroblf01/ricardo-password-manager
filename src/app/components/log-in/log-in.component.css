@@ -1,0 +1,21 @@
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-component {
+    margin-top: -20vh;
+    width: 40vh;
+}
+
+.login-forms-inputs {
+    width: 100%;
+}
+
+.login-errors {
+    color: red;
+    font-size: 1.5rem;
+    margin-top: 1rem;
+}
