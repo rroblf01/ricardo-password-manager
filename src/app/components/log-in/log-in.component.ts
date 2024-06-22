@@ -16,6 +16,7 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { Router } from '@angular/router';
 
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
@@ -42,7 +43,7 @@ export class LogInComponent {
   name: string = '';
   password: string = '';
 
-  constructor(private RestService: RestService) {}
+  constructor(private RestService: RestService, private router: Router) {}
   clickEvent(event: MouseEvent) {
     this.hide.set(!this.hide);
     event.stopPropagation();
@@ -62,7 +63,7 @@ export class LogInComponent {
         const token = (v as { token: string }).token;
 
         localStorage.setItem('token', token);
-        window.location.href = '/';
+        this.router.navigate(['/']);
       },
       error: (e) => {
         this.showDialog('Error', e.error.error);

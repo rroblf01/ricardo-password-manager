@@ -8,6 +8,7 @@ import {
   MatDialog,
   MatDialogRef
 } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -20,9 +21,9 @@ import {
 export class HomeComponent{
   readonly dialog = inject(MatDialog);
   token: string = localStorage.getItem('token') || '';
-  constructor(private RestService: RestService) {
+  constructor(private RestService: RestService, private router: Router) {
     if (!this.token) {
-      window.location.href = '/login';
+      this.router.navigate(['/login']);
     }
   }
 
@@ -40,7 +41,7 @@ export class HomeComponent{
       this.RestService.delete(url, { Authorization: `Bearer ${this.token}` }).subscribe({
         next: (value: any): void => {
           localStorage.clear();
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         },
         error: (e: any): void => {
           this.showDialog('Error', e.error.message);
@@ -49,7 +50,7 @@ export class HomeComponent{
 
   logout(): void {
     localStorage.clear();
-    window.location.href = '/login';
+    this.router.navigate(['/login']);
   }
 
   showDialog(title: string, message: string, action: string = 'info'): MatDialogRef<DialogComponent, any> {

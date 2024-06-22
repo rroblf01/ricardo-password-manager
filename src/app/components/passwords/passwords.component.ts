@@ -21,6 +21,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { DialogComponent } from '../dialog/dialog.component';
+import { Router } from '@angular/router';
 
 interface Account {
   id: string;
@@ -63,7 +64,7 @@ export class PasswordsComponent implements OnInit {
   displayedColumns: string[] = ['service', 'email', 'username', 'password', 'decrypt', 'phrase', 'delete'];
 
   @ViewChild(MatTable) table: MatTable<Account> | undefined;
-  constructor(private RestService: RestService){}
+  constructor(private RestService: RestService, private router: Router){}
 
   ngOnInit(): void {
     const url = `${environment.apiUrl}/api/user`
@@ -75,7 +76,7 @@ export class PasswordsComponent implements OnInit {
         },
         error: (e: Error): void => {
           localStorage.clear();
-          window.location.href = '/login';
+          this.router.navigate(['/login']);
         }
       });
       const fields = ['service', 'email', 'username', 'password', 'phrase'];
@@ -167,6 +168,6 @@ export class PasswordsComponent implements OnInit {
 
   logout(): void {
     localStorage.clear();
-    window.location.href = '/login';
+    this.router.navigate(['/login']);
   }
 }
