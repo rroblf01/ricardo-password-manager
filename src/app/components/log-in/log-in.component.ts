@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { environment } from './../../../environments/environment';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -6,7 +6,8 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
 import { RestService } from './../../rest.service';
-
+import { DialogComponent } from '../dialog/dialog.component';
+import {MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {
   FormControl,
   FormGroupDirective,
@@ -32,6 +33,7 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
   styleUrl: './log-in.component.css'
 })
 export class LogInComponent {
+  readonly dialog = inject(MatDialog);
   hide = signal(true);
   userNameFormControl = new FormControl('', [Validators.required, Validators.minLength(4)]);
   passwordFormControl = new FormControl('', [Validators.required, Validators.minLength(6)]);
@@ -39,7 +41,6 @@ export class LogInComponent {
 
   name: string = '';
   password: string = '';
-  errors: string = '';
 
   constructor(private RestService: RestService) {}
   clickEvent(event: MouseEvent) {
@@ -64,8 +65,12 @@ export class LogInComponent {
         window.location.href = '/';
       },
       error: (e) => {
-        this.errors = e.error.error;
+        this.showDialog('Error', e.error.error);
       }
     })
+  }
+
+  showDialog(title: string, message: string, action: string = 'info'): MatDialogRef<DialogComponent, any> {
+    return this.dialog.open(DialogComponent, {data: {title, message, action}});
   }
 }

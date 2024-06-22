@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild} from '@angular/core';
+import { Component, OnInit, ViewChild, inject, ChangeDetectorRef} from '@angular/core';
 import { RestService } from './../../rest.service';
 import {ErrorStateMatcher} from '@angular/material/core';
 import { environment } from './../../../environments/environment';
@@ -6,6 +6,11 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
 import {MatTableModule, MatTable} from '@angular/material/table';
+import {MatIconModule} from '@angular/material/icon';
+import {
+  MatDialog,
+  MatDialogRef
+} from '@angular/material/dialog';
 
 import {
   FormControl,
@@ -15,6 +20,7 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { DialogComponent } from '../dialog/dialog.component';
 
 interface Account {
   id: string;
@@ -22,6 +28,7 @@ interface Account {
   email: string;
   username: string;
   password: string;
+  phrase?: string;
 }
 
 interface User{
@@ -41,18 +48,19 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
 @Component({
   selector: 'app-passwords',
   standalone: true,
-  imports: [MatFormFieldModule, FormsModule, ReactiveFormsModule, MatButtonModule, MatInputModule, MatTableModule],
+  imports: [MatFormFieldModule, FormsModule, ReactiveFormsModule, MatButtonModule, MatInputModule, MatTableModule, DialogComponent, MatIconModule],
   templateUrl: './passwords.component.html',
   styleUrl: './passwords.component.css'
 })
 export class PasswordsComponent implements OnInit {
+  readonly dialog = inject(MatDialog);
   inputFormControl = new FormControl('', [Validators.required, Validators.minLength(4)]);
   matcher = new MyErrorStateMatcher();
   token: string = localStorage.getItem('token') || '';
   name: string = '';
   accounts: Account[] = [];
   fields: { name: string, value: string, matcher: MyErrorStateMatcher, inputFormControl: FormControl}[] = [];
-  displayedColumns: string[] = ['service', 'email', 'username', 'password', 'decrypt'];
+  displayedColumns: string[] = ['service', 'email', 'username', 'password', 'decrypt', 'phrase', 'delete'];
 
   @ViewChild(MatTable) table: MatTable<Account> | undefined;
   constructor(private RestService: RestService){}
@@ -66,7 +74,6 @@ export class PasswordsComponent implements OnInit {
           this.accounts = accounts;
         },
         error: (e: Error): void => {
-          console.error(e);
           localStorage.clear();
           window.location.href = '/login';
         }
@@ -79,15 +86,62 @@ export class PasswordsComponent implements OnInit {
       });
   }
 
-  decryptElement(element: Account): void {
-    console.log(element)
+  confirmDelete(account: Account): void {
+    this.showDialog('Confirm Delete', `Are you sure you want to delete the account for ${account.service}?`, 'confirm').afterClosed().subscribe({
+      next: (value: boolean): void => {
+        if (value) {
+          this.deleteAccount(account);
+        }
+      }
+    });
   }
+
+  renderRows(): void {
+    if (this.table) {
+      this.table.renderRows();
+    }
+  }
+
+  deleteAccount(account: Account): void {
+    const url = `${environment.apiUrl}/api/account/${account.id}`;
+
+    this.RestService.delete(url, { Authorization: `Bearer ${this.token}` }).subscribe({
+      next: (value: Object): void => {
+        this.showDialog('Account deleted', `The account for ${account.service} has been deleted.`);
+        this.accounts = this.accounts.filter((a) => a.id !== account.id);
+        this.renderRows()
+      },
+      error: (e): void => {
+        this.showDialog('Error', e.error.error);
+      }
+    });
+  }
+
+  decryptElement(account: Account): void {
+    const url = `${environment.apiUrl}/api/account/${account.id}/decrypt`;
+    const body = {phrase: account.phrase};
+
+    this.RestService.post(url, body, { Authorization: `Bearer ${this.token}` }).subscribe({
+      next: (value: Object): void => {
+        const password = (value as Account).password;
+        this.showDialog('Password Decrypted', `The password for ${account.service}: ${password}`);
+      },
+      error: (e): void => {
+        this.showDialog('Error', e.error.error);
+      }
+    });
+  }
+
+  showDialog(title: string, message: string, action: string = 'info'): MatDialogRef<DialogComponent, any> {
+    return this.dialog.open(DialogComponent, {data: {title, message, action}});
+  }
+
   restoreFields(): void {
     this.fields.forEach((field) => {
-      field.value = '';
       field.inputFormControl.reset();
     });
   }
+
   addAccount(): void {
     const errors = this.fields.filter((field) => field.inputFormControl.invalid);
     if (errors.length) return;
@@ -102,15 +156,17 @@ export class PasswordsComponent implements OnInit {
     this.RestService.post(url, body, { Authorization: `Bearer ${this.token}` }).subscribe({
       next: (value: Object): void => {
         this.accounts.push(value as Account);
-        this.fields.forEach((field) => field.value = '');
-        if (this.table) {
-          this.table.renderRows();
-        }
+        this.renderRows()
         this.restoreFields()
       },
-      error: (e: Error): void => {
-        console.error(e);
+      error: (e: any): void => {
+        this.showDialog('Error', e.error.error);
       }
     });
+  }
+
+  logout(): void {
+    localStorage.clear();
+    window.location.href = '/login';
   }
 }

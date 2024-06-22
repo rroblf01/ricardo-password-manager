@@ -19,7 +19,7 @@ export class RestService {
     return this.http.put(url, data);
   }
 
-  public delete(url: string) {
-    return this.http.delete(url);
+  public delete(url: string, headers?: any) {
+    return this.http.delete(url, { headers });
   }
 }
